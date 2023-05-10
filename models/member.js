@@ -9,7 +9,7 @@ const Member = sequelize.define('Member',{
         primaryKey: true,
         allowNull: false
     },
-    name:{
+    fullName:{
         type: Sequelize.STRING,
         allowNull: false
     },
@@ -25,7 +25,7 @@ const Member = sequelize.define('Member',{
         type: Sequelize.STRING,
         allowNull: false
     },
-    divisi:{
+    division:{
         type: Sequelize.ENUM('Kerohanian', 'Pengurus Inti', 'PSDM', 'Minat & Bakat', 'PDD'),
         allowNull: false
     }
