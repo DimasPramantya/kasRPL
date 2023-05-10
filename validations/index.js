@@ -8,7 +8,7 @@ const validateUserCreatePayload = async(payload)=>{
 }
 
 const validateUserLoginPayload = async(payload)=>{
-    const validationResult = await userLoginSchema(payload);
+    const validationResult = await userLoginSchema.validate(payload);
     if(validationResult.error){
         throw new Error(validationResult.error.message);
     }

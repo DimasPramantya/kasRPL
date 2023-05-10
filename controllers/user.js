@@ -2,7 +2,7 @@ require('dotenv').config();
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt')
 
-const { validateUserCreatePayload } = require("../validations");
+const { validateUserCreatePayload, validateUserLoginPayload } = require("../validations");
 const secretKey = process.env.SECRET_KEY;
 
 const Member = require("../models/member");
@@ -35,9 +35,7 @@ const userRegisterHandler = async(req,res,next)=>{
             roleId: role.id
         })
         const payload = {
-            id: newUser.id,
-            username: newUser.username,
-            role: newUser.role
+            userId: newUser.id,
         }
         const token = jwt.sign(payload, secretKey,{
             algorithm: 'HS256'
@@ -54,4 +52,31 @@ const userRegisterHandler = async(req,res,next)=>{
     }
 }
 
-module.exports = {userRegisterHandler}
+const userLoginHandler = async(req,res,next)=>{
+    const {email, password} = req.body;
+    await validateUserLoginPayload({email,password});
+    const loggedUser = await Member.findOne({
+        where:{
+            email
+        }
+    })
+    if(!loggedUser){
+        throw new Error("Wrong email or password")
+    }
+    const validatePassword = bcrypt.compare(loggedUser.password, password);
+    if(!validatePassword){
+        throw new Error("Wrong email or password")
+    }
+    const token = jwt.sign({
+        userId: loggedUser.id
+    }, secretKey);
+    res.json({
+        user: {
+            username: loggedUser.username,
+            division: loggedUser.division
+        },
+        token
+    })
+}
+
+module.exports = {userRegisterHandler, userLoginHandler}
