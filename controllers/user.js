@@ -35,16 +35,14 @@ const userRegisterHandler = async(req,res,next)=>{
             roleId: role.id
         })
         const payload = {
+            role: role.name,
             userId: newUser.id,
         }
         const token = jwt.sign(payload, secretKey,{
             algorithm: 'HS256'
         })
         res.json({
-            user: {
-                username: newUser.username,
-                division: newUser.division
-            },
+            role: role.name,
             token
         });
     } catch (error) {
@@ -53,30 +51,47 @@ const userRegisterHandler = async(req,res,next)=>{
 }
 
 const userLoginHandler = async(req,res,next)=>{
-    const {email, password} = req.body;
-    await validateUserLoginPayload({email,password});
-    const loggedUser = await Member.findOne({
-        where:{
-            email
+    try {
+        const {email, password} = req.body;
+        await validateUserLoginPayload({email,password});
+        const loggedUser = await Member.findOne({
+            where:{
+                email
+            }
+        });
+        if(!loggedUser){
+            throw new Error("Wrong email or password")
         }
-    })
-    if(!loggedUser){
-        throw new Error("Wrong email or password")
+        const validatePassword = bcrypt.compare(loggedUser.password, password);
+        if(!validatePassword){
+            throw new Error("Wrong email or password")
+        }
+        const role = await loggedUser.getRole();
+        const token = jwt.sign({
+            role: role.name,
+            userId: loggedUser.id
+        }, secretKey);
+        res.json({
+            role: role.name,
+            token
+        })   
+    } catch (error) {
+        next(error)
     }
-    const validatePassword = bcrypt.compare(loggedUser.password, password);
-    if(!validatePassword){
-        throw new Error("Wrong email or password")
-    }
-    const token = jwt.sign({
-        userId: loggedUser.id
-    }, secretKey);
-    res.json({
-        user: {
-            username: loggedUser.username,
-            division: loggedUser.division
-        },
-        token
-    })
 }
 
-module.exports = {userRegisterHandler, userLoginHandler}
+const getUserDataHandler = async(req,res,next)=>{
+    try {
+        const authorizationHeader = req.headers.authorization;
+        if (authorizationHeader && authorizationHeader.startsWith('Bearer ')) {
+            const token = authorizationHeader.substring(7); // Remove 'Bearer ' from the header
+        }
+        
+    } catch (error) {
+        next(error);
+    }
+}
+
+
+
+module.exports = {userRegisterHandler, userLoginHandler, getUserDataHandler}
