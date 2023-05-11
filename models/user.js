@@ -29,6 +29,8 @@ const User = sequelize.define('user',{
         type: Sequelize.ENUM('Kerohanian', 'Pengurus Inti', 'PSDM', 'Minat & Bakat', 'PDD'),
         allowNull: false
     }
+},{
+    timestamps: false
 })
 
 module.exports = User;

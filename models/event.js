@@ -1,20 +1,22 @@
 const Sequelize = require('sequelize');
-
 const sequelize = require('../utils/db');
 
-const Role = sequelize.define('role',{
+const Event = sequelize.define('event',{
     id:{
         type: Sequelize.INTEGER,
-        autoIncrement: true,
+        allowNUll: false,
         primaryKey: true,
-        allowNull: false
+        autoIncrement: true
     },
     name:{
         type: Sequelize.STRING,
-        allowNull: false
+        allowNUll: false
+    }, date:{
+        type: Sequelize.STRING,
+        allowNUll: false
     }
 },{
     timestamps: false
 })
 
-module.exports = Role;
+module.exports = Event;
