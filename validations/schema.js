@@ -14,4 +14,9 @@ const userLoginSchema = Joi.object({
     password: Joi.string().required()
 })
 
-module.exports = {userCreateSchema, userLoginSchema}
+const adminCreateBillSchema = Joi.object({
+    name: Joi.string().required(),
+    price: Joi.number().greater(0).required()
+})
+
+module.exports = {userCreateSchema, userLoginSchema, adminCreateBillSchema}

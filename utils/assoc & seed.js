@@ -1,13 +1,13 @@
 const sequelize = require('./db');
 const Role = require('../models/role');
-const Member = require('../models/member');
+const User = require('../models/user');
 const Bill = require('../models/bill');
 const Payment = require('../models/payment');
 
-Member.belongsTo(Role);
-Role.hasMany(Member);
+User.belongsTo(Role);
+Role.hasMany(User);
 
-Bill.belongsToMany(Member, {through: Payment});
+Bill.belongsToMany(User, {through: Payment});
 
 //Seeders section
 // const bcrypt = require("bcrypt");
@@ -19,7 +19,7 @@ Bill.belongsToMany(Member, {through: Payment});
 // }).then((admin)=>{
 //     console.log(admin);
 //     const password = bcrypt.hashSync("Intan1234",10);
-//     admin.createMember({
+//     admin.createUser({
 //         fullName: "Intan",
 //         division: "Pengurus Inti",
 //         email: "intan@gmail.com",

@@ -5,14 +5,14 @@ const bcrypt = require('bcrypt')
 const { validateUserCreatePayload, validateUserLoginPayload } = require("../validations");
 const secretKey = process.env.SECRET_KEY;
 
-const Member = require("../models/member");
+const User = require("../models/user");
 const Role = require('../models/role');
 
 const userRegisterHandler = async(req,res,next)=>{
     try {
         const {fullName, username, email, password, confPass, division} = req.body;
-        await validateUserCreatePayload({fullName, username, email, password, confPass, division});
-        const duplicateEmail = await Member.findOne({
+        validateUserCreatePayload({fullName, username, email, password, confPass, division});
+        const duplicateEmail = await User.findOne({
             where: {
                 email
             }
@@ -26,7 +26,7 @@ const userRegisterHandler = async(req,res,next)=>{
             }
         })
         const hashedPassword = await bcrypt.hash(password, 10)
-        const newUser = await Member.create({
+        const newUser = await User.create({
             fullName,
             username,
             email,
@@ -53,8 +53,8 @@ const userRegisterHandler = async(req,res,next)=>{
 const userLoginHandler = async(req,res,next)=>{
     try {
         const {email, password} = req.body;
-        await validateUserLoginPayload({email,password});
-        const loggedUser = await Member.findOne({
+        validateUserLoginPayload({email,password});
+        const loggedUser = await User.findOne({
             where:{
                 email
             }

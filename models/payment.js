@@ -14,11 +14,9 @@ const Payment = sequelize.define('payment',{
     },
     method:{
         type: Sequelize.ENUM('BCA', 'GOPAY', 'DANA', 'SHOPEEPAY'),
-        allowNull: false
     },
     proof:{
         type: Sequelize.STRING,
-        allowNull: false
     },
 })
 
