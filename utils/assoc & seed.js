@@ -5,12 +5,12 @@ const Bill = require('../models/bill');
 const Payment = require('../models/payment');
 const Event = require('../models/event');
 const Expenditure = require('../models/expenditure');
-const CashBalance = require('../models/cashBalance');
 
 User.belongsTo(Role);
 Role.hasMany(User);
 
 Bill.belongsToMany(User, {through: Payment});
+User.belongsToMany(Bill, {through: Payment})
 
 Event.hasMany(Expenditure);
 Expenditure.belongsTo(Event);

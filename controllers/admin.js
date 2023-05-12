@@ -2,9 +2,10 @@ require('dotenv').config();
 const jwt = require('jsonwebtoken');
 
 const Bill = require("../models/bill");
-const Member = require("../models/user");
 const { validateAdminCreateBillPayload } = require('../validations');
 const Role = require('../models/role');
+const Payment = require('../models/payment');
+const User = require('../models/user');
 
 const secretKey = process.env.SECRET_KEY;
 
@@ -26,11 +27,19 @@ const verifyAdmin = (token)=>{
     return decoded;
 }
 
-const getPaymentsData = (req,res,next)=>{
+const getPaymentsData = async(req,res,next)=>{
     try {
         let token = getToken(req.headers)
         const decoded = verifyAdmin(token)
-        res.json({decoded})    
+        const bills = await Bill.findAll();
+        const paymentData = [];
+        for(let bill of bills){
+            const data = await bill.getUsers({
+                attributes: { exclude: ['password', 'email', 'username'] },
+            });
+            paymentData.push(data);
+        }
+        res.json(paymentData);
     } catch (error) {
        next(error)
     }
@@ -55,6 +64,14 @@ const postBill = async(req,res,next)=>{
     }
 }
 
+const verifyUserPayment = async(req,res,next)=>{
+    try {
+        const {id} = req.params;
+    } catch (error) {
+        next(error)
+    }
+}
+
 module.exports = {
-    getPaymentsData, postBill
+    getPaymentsData, postBill, verifyUserPayment
 };
