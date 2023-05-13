@@ -64,14 +64,37 @@ const postBill = async(req,res,next)=>{
     }
 }
 
+const getUserPayment = async(req,res,next)=>{
+    try {
+        const {paymentId} = req.params;
+        const token = getToken(req.headers);
+        const decoded = verifyAdmin(token);
+        const currentPayment = await Payment.findOne({where: {id: paymentId}});
+        res.json({
+            currentPayment
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
 const verifyUserPayment = async(req,res,next)=>{
     try {
-        const {id} = req.params;
+        const {paymentId} = req.params;
+        const token = getToken(req.headers);
+        const decoded = verifyAdmin(token);
+        const currentPayment = await Payment.findOne({where: {id: paymentId}});
+        const {status} = req.body;
+        currentPayment.status = status;
+        currentPayment.save();
+        res.json({
+            currentPayment
+        })
     } catch (error) {
         next(error)
     }
 }
 
 module.exports = {
-    getPaymentsData, postBill, verifyUserPayment
+    getPaymentsData, postBill, verifyUserPayment, getUserPayment
 };
