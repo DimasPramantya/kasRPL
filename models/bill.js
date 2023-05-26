@@ -16,6 +16,13 @@ const Bill = sequelize.define('bill', {
         type: Sequelize.INTEGER,
         allowNull: false
     }
+}, {
+    timestamps: {
+      updatedAt: {
+        field: 'updated_at',
+        format: 'YYYY-MM-DD HH:mm',
+      },
+    },
 })
 
 module.exports = Bill;

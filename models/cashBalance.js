@@ -16,6 +16,13 @@ const CashBalance = sequelize.define('cashbalance',{
         type: Sequelize.INTEGER,
         allowNUll: false,
     }
+}, {
+    timestamps: {
+      updatedAt: {
+        field: 'updated_at',
+        format: 'YYYY-MM-DD HH:mm',
+      },
+    },
 })
 
 module.exports = CashBalance;

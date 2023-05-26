@@ -15,7 +15,13 @@ const Expenditure = sequelize.define('expenditure', {
     cashOut:{
         type: Sequelize.INTEGER,
         allowNUll: false,
+    },
+    date:{
+        type: Sequelize.STRING,
+        allowNUll: false
     }
+},{
+    timestamps: false
 })
 
 module.exports = Expenditure;

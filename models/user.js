@@ -26,11 +26,16 @@ const User = sequelize.define('user',{
         allowNull: false
     },
     division:{
-        type: Sequelize.ENUM('Kerohanian', 'Pengurus Inti', 'PSDM', 'Minat & Bakat', 'PDD'),
+        type: Sequelize.ENUM('Kerohanian', 'Pengurus Inti', 'PSDM', 'Minat & Bakat', 'PDD', 'Humas'),
         allowNull: false
     }
-},{
-    timestamps: false
+}, {
+    timestamps: {
+      updatedAt: {
+        field: 'updated_at',
+        format: 'YYYY-MM-DD HH:mm',
+      },
+    },
 })
 
 module.exports = User;

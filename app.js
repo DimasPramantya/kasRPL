@@ -1,5 +1,6 @@
 const express = require('express');
 const multer = require('multer');
+const cors = require('cors');
 
 const association = require('./utils/assoc & seed');
 const errorHandler = require('./middleware/errorHandler');
@@ -10,6 +11,15 @@ const upload = require('./middleware/multer');
 
 const app = express();
 
+app.use(cors({
+    origin: "http://localhost:3000",
+    methods: ['GET', 'POST', 'PUT']
+}));
+app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT');
+    next();
+});
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
@@ -25,8 +35,8 @@ app.use(notFoundHandler);
 
 association()
 .then(()=>{
-    app.listen(3000,()=>{
-        console.log('server is running on port 3000');
+    app.listen(5000,()=>{
+        console.log('server is running on port 5000');
     })
 })
 

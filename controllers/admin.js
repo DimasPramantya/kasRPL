@@ -6,6 +6,9 @@ const { validateAdminCreateBillPayload } = require('../validations');
 const Role = require('../models/role');
 const Payment = require('../models/payment');
 const User = require('../models/user');
+const Event = require('../models/event');
+const CashBalance = require('../models/cashBalance');
+const Expenditure = require('../models/expenditure');
 
 const secretKey = process.env.SECRET_KEY;
 
@@ -27,7 +30,7 @@ const verifyAdmin = (token)=>{
     return decoded;
 }
 
-const getPaymentsData = async(req,res,next)=>{
+const getAdminDashboard = async(req,res,next)=>{
     try {
         let token = getToken(req.headers)
         const decoded = verifyAdmin(token)
@@ -35,11 +38,12 @@ const getPaymentsData = async(req,res,next)=>{
         const paymentData = [];
         for(let bill of bills){
             const data = await bill.getUsers({
-                attributes: { exclude: ['password', 'email', 'username'] },
+                attributes: { exclude: ['password', 'email', 'username', "division", "roleId"] },
             });
-            paymentData.push(data);
+            paymentData.push({bill,userBills: data});
         }
-        res.json(paymentData);
+        const currBalance = await CashBalance.findOne({where: {name:"Kas Periode 2022-2023"}});
+        res.json({paymentData, username: decoded.username, currBalance});
     } catch (error) {
        next(error)
     }
@@ -58,7 +62,7 @@ const postBill = async(req,res,next)=>{
         for(let person of persons){
             await currentBill.addUser(person, {through: {status: "Unpaid", method:""}});
         }
-        res.json({decoded})
+        res.json({message: "Successfully Create Bill"});
     } catch (error) {
         next(error);
     }
@@ -84,17 +88,78 @@ const verifyUserPayment = async(req,res,next)=>{
         const token = getToken(req.headers);
         const decoded = verifyAdmin(token);
         const currentPayment = await Payment.findOne({where: {id: paymentId}});
+        const currBill = await Bill.findOne({where: {id: currentPayment.billId}})
         const {status} = req.body;
+        const currBalance = await CashBalance.findOne({where: {name: "Kas Periode 2022-2023"}});
+        if(status == "BERHASIL"){
+            currBalance.ammount += currBill.price;
+        }
         currentPayment.status = status;
-        currentPayment.save();
+        await currentPayment.save();
+        await currBalance.save();
         res.json({
-            currentPayment
+            currentPayment, currBalance
         })
     } catch (error) {
         next(error)
     }
 }
 
+const postCreateEventHandler = async(req,res,next)=>{
+    try {
+        const token = getToken(req.headers);
+        const decoded = verifyAdmin(token);
+        const {name, date} = req.body;
+        const currEvent = await Event.create({
+            name,date
+        });
+        res.json({message: "Succesfully Create Event!"});
+    } catch (error) {
+        next(error);
+    }
+}
+
+const getAllEventHandler = async(req,res,next)=>{
+    try {
+        const token = getToken(req.headers);
+        const decoded = verifyAdmin(token);
+        const events = await Event.findAll();
+        res.json({events});
+    } catch (error) {
+        next(error);
+    }
+}
+
+const getEventHandler = async(req,res,next)=>{
+    try {
+        const token = getToken(req.headers);
+        const decoded = verifyAdmin(token);
+        const {eventId} = req.params;
+        const event = await Event.findOne({where: {id:eventId}});
+        res.json({event});
+    } catch (error) {
+        next(error);
+    }
+}
+
+const postEventExpenditure = async(req,res,next)=>{
+    try {
+        const token = getToken(req.headers);
+        const decoded = verifyAdmin(token);
+        const {eventId} = req.params;
+        const {name, date, cashOut} = req.body;
+        const currExpenditure = await Expenditure.create({
+            name,date,cashOut,eventId:eventId
+        });
+        const currBalance = await CashBalance.findOne({where: {name: "Kas Periode 2022-2023"}});
+        currBalance.ammount -= cashOut;
+        await currBalance.save();
+        res.json({currExpenditure, message: "Succesfully Create Event Expenditure"});
+    } catch (error) {
+        next(error)
+    }
+}
+
 module.exports = {
-    getPaymentsData, postBill, verifyUserPayment, getUserPayment
+    getAdminDashboard, postBill, verifyUserPayment, getUserPayment, postCreateEventHandler, getAllEventHandler, postEventExpenditure, getEventHandler
 };

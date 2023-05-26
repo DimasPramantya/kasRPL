@@ -18,6 +18,13 @@ const Payment = sequelize.define('payment',{
     proof:{
         type: Sequelize.STRING,
     },
+}, {
+    timestamps: {
+      updatedAt: {
+        field: 'updated_at',
+        format: 'YYYY-MM-DD HH:mm',
+      },
+    },
 })
 
 module.exports = Payment;

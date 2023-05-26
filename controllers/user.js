@@ -54,6 +54,7 @@ const userRegisterHandler = async (req, res, next) => {
             algorithm: 'HS256'
         })
         res.json({
+            message: "Register Successfull!",
             role: role.name,
             token
         });
@@ -74,19 +75,20 @@ const userLoginHandler = async (req, res, next) => {
         if (!loggedUser) {
             throw new Error("Wrong email or password")
         }
-        const validatePassword = bcrypt.compare(loggedUser.password, password);
+        const validatePassword = await bcrypt.compare(password,loggedUser.password);
         if (!validatePassword) {
             throw new Error("Wrong email or password")
         }
         const role = await loggedUser.getRole();
         const token = jwt.sign({
             role: role.name,
-            userId: loggedUser.id
-
+            userId: loggedUser.id,
+            username: loggedUser.username
         }, secretKey);
         res.json({
             role: role.name,
-            token
+            token,
+            message: "Login Successfull!"
         })
     } catch (error) {
         next(error)
@@ -97,9 +99,9 @@ const getUserDataHandler = async (req, res, next) => {
     try {
         const token = getToken(req.headers);
         const decoded = jwt.verify(token, secretKey);
-        const loggedUser = await User.findOne({ where: { id: decoded.userId }, attributes: { exclude: ['password', 'email', 'username'] } });
+        const loggedUser = await User.findOne({ where: { id: decoded.userId }, attributes: { exclude: ['password', 'email'] } });
         const bills = await loggedUser.getBills();
-        res.json(bills)
+        res.json({bills, username: loggedUser.username, division: loggedUser.division});
     } catch (error) {
         next(error);
     }
@@ -130,6 +132,7 @@ const userPayTheBillHandler = async (req, res, next) => {
         currentBill[0].payment.status = "Proses"
         // Upload image to Cloudinary
         if (req.file) {
+            console.log('test');
             const file = req.file;
             const uploadOptions = {
                 folder: 'payment_images/', // Specify the folder in Cloudinary where you want to store the images
@@ -148,9 +151,8 @@ const userPayTheBillHandler = async (req, res, next) => {
 
             // Delete the temporary file from the server
             fs.unlinkSync(file.path);
-
-            await currentBill[0].payment.save();
         }
+        await currentBill[0].payment.save();
         res.json({currentBill,method})
     } catch (error) {
         next(error)
