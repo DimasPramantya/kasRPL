@@ -8,6 +8,10 @@ const Payment = sequelize.define('payment',{
         primaryKey: true,
         autoIncrement: true
     },
+    accName:{
+        type: Sequelize.STRING,
+        allowNull: false
+    },
     status:{
         type: Sequelize.ENUM('UNPAID', 'DITOLAK', 'PROSES', 'BERHASIL'),
         allowNull: false
@@ -20,10 +24,13 @@ const Payment = sequelize.define('payment',{
     },
 }, {
     timestamps: {
-      updatedAt: {
-        field: 'updated_at',
-        format: 'YYYY-MM-DD HH:mm',
-      },
+        createdAt: {
+            field: 'created_at',
+            format: 'YYYY-MM-DD HH:mm',
+          },updatedAt:{
+            field: 'updated_at',
+            format: 'YYYY-MM-DD HH:mm',
+          }
     },
 })
 

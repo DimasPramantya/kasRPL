@@ -10,7 +10,7 @@ const Bill = sequelize.define('bill', {
     },
     name:{
         type: Sequelize.STRING,
-        allowNull: false
+        
     },
     price:{
         type: Sequelize.INTEGER,
@@ -18,10 +18,13 @@ const Bill = sequelize.define('bill', {
     }
 }, {
     timestamps: {
-      updatedAt: {
-        field: 'updated_at',
-        format: 'YYYY-MM-DD HH:mm',
-      },
+        createdAt: {
+            field: 'created_at',
+            format: 'YYYY-MM-DD HH:mm',
+          },updatedAt:{
+            field: 'updated_at',
+            format: 'YYYY-MM-DD HH:mm',
+          }
     },
 })
 

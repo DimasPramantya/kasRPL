@@ -49,6 +49,8 @@ const userRegisterHandler = async (req, res, next) => {
         const payload = {
             role: role.name,
             userId: newUser.id,
+            userName: newUser.username,
+            userDivision: newUser.division
         }
         const token = jwt.sign(payload, secretKey, {
             algorithm: 'HS256'
@@ -83,7 +85,8 @@ const userLoginHandler = async (req, res, next) => {
         const token = jwt.sign({
             role: role.name,
             userId: loggedUser.id,
-            username: loggedUser.username
+            username: loggedUser.username,
+            userDivision: loggedUser.division
         }, secretKey);
         res.json({
             role: role.name,
@@ -114,7 +117,7 @@ const userGetTheBillHandler = async (req, res, next) => {
         const loggedUser = await User.findOne({ where: { id: decoded.userId }, attributes: { exclude: ['password', 'email', 'username'] } });
         const { billId } = req.params;
         const currentBill = await loggedUser.getBills({ where: { id: billId } });
-        res.json(currentBill);
+        res.json({currentBill, username: decoded.username, userDivision: decoded.userDivision});
     } catch (error) {
         next(error)
     }
@@ -126,10 +129,11 @@ const userPayTheBillHandler = async (req, res, next) => {
         const decoded = jwt.verify(token, secretKey);
         const loggedUser = await User.findOne({ where: { id: decoded.userId }, attributes: { exclude: ['password', 'email', 'username'] } });
         const { billId } = req.params;
-        const { method } = req.body;
+        const { method, accName } = req.body;
         const currentBill = await loggedUser.getBills({ where: { id: billId } });
         currentBill[0].payment.method = method;
         currentBill[0].payment.status = "Proses"
+        currentBill[0].payment.accName = accName;
         // Upload image to Cloudinary
         if (req.file) {
             console.log('test');

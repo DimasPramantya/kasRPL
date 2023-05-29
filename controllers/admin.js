@@ -1,5 +1,7 @@
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
+const cloudinary = require('../utils/cloudinary');
+const fs = require('fs')
 
 const Bill = require("../models/bill");
 const { validateAdminCreateBillPayload } = require('../validations');
@@ -60,7 +62,7 @@ const postBill = async(req,res,next)=>{
         const persons = await member.getUsers();
         const currentBill = await Bill.create({name,price});
         for(let person of persons){
-            await currentBill.addUser(person, {through: {status: "Unpaid", method:""}});
+            await currentBill.addUser(person, {through: {status: "Unpaid", method:"", accName:""}});
         }
         res.json({message: "Successfully Create Bill"});
     } catch (error) {
@@ -98,7 +100,7 @@ const verifyUserPayment = async(req,res,next)=>{
         await currentPayment.save();
         await currBalance.save();
         res.json({
-            currentPayment, currBalance
+            currentPayment, currBalance, username: decoded.username
         })
     } catch (error) {
         next(error)
@@ -113,7 +115,7 @@ const postCreateEventHandler = async(req,res,next)=>{
         const currEvent = await Event.create({
             name,date
         });
-        res.json({message: "Succesfully Create Event!"});
+        res.json({message: "Succesfully Create Event!", });
     } catch (error) {
         next(error);
     }
@@ -124,7 +126,7 @@ const getAllEventHandler = async(req,res,next)=>{
         const token = getToken(req.headers);
         const decoded = verifyAdmin(token);
         const events = await Event.findAll();
-        res.json({events});
+        res.json({events, username: decoded.username});
     } catch (error) {
         next(error);
     }
@@ -136,7 +138,8 @@ const getEventHandler = async(req,res,next)=>{
         const decoded = verifyAdmin(token);
         const {eventId} = req.params;
         const event = await Event.findOne({where: {id:eventId}});
-        res.json({event});
+        const eventExpenditures = await event.getExpenditures();
+        res.json({eventName: event.name, username: decoded.username, eventExpenditures});
     } catch (error) {
         next(error);
     }
@@ -147,13 +150,37 @@ const postEventExpenditure = async(req,res,next)=>{
         const token = getToken(req.headers);
         const decoded = verifyAdmin(token);
         const {eventId} = req.params;
-        const {name, date, cashOut} = req.body;
+        const currEvent = await Event.findOne({where:{id: eventId}});
+        const {name, cashOut} = req.body;
+        
         const currExpenditure = await Expenditure.create({
-            name,date,cashOut,eventId:eventId
-        });
+            name, cashOut: parseInt(cashOut), eventId:eventId, imageUrl:" "
+        })
+        // Upload image to Cloudinary
+        if (req.file) {
+            console.log('test');
+            const file = req.file;
+            const uploadOptions = {
+                folder: `Event Expenditure/${currEvent.name}/`, // Specify the folder in Cloudinary where you want to store the images
+                public_id: `payment_${name}`, // Assign a unique public ID for the image
+                overwrite: true // Overwrite if the image with the same public ID already exists
+            };
+
+            // Upload the image to Cloudinary
+            const uploadResult = await cloudinary.uploader.upload(file.path, uploadOptions);
+
+            // Retrieve the URL of the uploaded image
+            const imageUrl = uploadResult.secure_url;
+
+            currExpenditure.imageUrl = imageUrl;
+
+            // Delete the temporary file from the server
+            fs.unlinkSync(file.path);
+        };
         const currBalance = await CashBalance.findOne({where: {name: "Kas Periode 2022-2023"}});
         currBalance.ammount -= cashOut;
-        await currBalance.save();
+        currBalance.save();
+        await currExpenditure.save();
         res.json({currExpenditure, message: "Succesfully Create Event Expenditure"});
     } catch (error) {
         next(error)

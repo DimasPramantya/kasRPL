@@ -16,12 +16,20 @@ const Expenditure = sequelize.define('expenditure', {
         type: Sequelize.INTEGER,
         allowNUll: false,
     },
-    date:{
+    imageUrl:{
         type: Sequelize.STRING,
         allowNUll: false
     }
 },{
-    timestamps: false
+    timestamps: {
+      createdAt: {
+        field: 'created_at',
+        format: 'YYYY-MM-DD HH:mm',
+      },updatedAt:{
+        field: 'updated_at',
+        format: 'YYYY-MM-DD HH:mm',
+      }
+    },
 })
 
 module.exports = Expenditure;
