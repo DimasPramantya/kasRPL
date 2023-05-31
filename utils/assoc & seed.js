@@ -18,6 +18,7 @@ Expenditure.belongsTo(Event);
 //Seeders section
 const bcrypt = require("bcrypt");
 const CashBalance = require('../models/cashBalance');
+const FundIncome = require('../models/fundIncome');
 
 const roles = [{
     name:"Admin"
@@ -46,15 +47,15 @@ const cashBalances = [{
 
 const association = async()=>{
     try {
-    await sequelize.sync({});
-    // await Role.bulkCreate(roles);
-    // const adminRole = await Role.findOne({
-    //     where:{
-    //         name: "Admin"
-    //     }
-    // })
-    // await adminRole.createUser(admin);
-    // await CashBalance.bulkCreate(cashBalances);
+    await sequelize.sync({force:true});
+    await Role.bulkCreate(roles);
+    const adminRole = await Role.findOne({
+        where:{
+            name: "Admin"
+        }
+    })
+    await adminRole.createUser(admin);
+    await CashBalance.bulkCreate(cashBalances);
     } catch (error) {
         console.log(error.message);
     }

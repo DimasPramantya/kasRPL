@@ -157,7 +157,7 @@ const userPayTheBillHandler = async (req, res, next) => {
             fs.unlinkSync(file.path);
         }
         await currentBill[0].payment.save();
-        res.json({currentBill,method})
+        res.json({currentBill,method, message: "Pay The Bill Successfull"})
     } catch (error) {
         next(error)
     }
