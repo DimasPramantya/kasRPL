@@ -15,6 +15,10 @@ const Bill = sequelize.define('bill', {
     price:{
         type: Sequelize.INTEGER,
         allowNull: false
+    },
+    cashIn:{
+        type: Sequelize.INTEGER,
+        allowNUll: false
     }
 }, {
     timestamps: {

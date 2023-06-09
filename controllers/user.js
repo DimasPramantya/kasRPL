@@ -8,7 +8,9 @@ const secretKey = process.env.SECRET_KEY;
 
 const User = require("../models/user");
 const Role = require('../models/role');
+const Bill = require("../models/bill")
 const cloudinary = require('../utils/cloudinary');
+const Payment = require('../models/payment');
 
 const getToken = (headers) => {
     const authorizationHeader = headers.authorization;
@@ -123,6 +125,24 @@ const userGetTheBillHandler = async (req, res, next) => {
     }
 }
 
+const userRepayTheBillHandler = async(req,res,next)=>{
+    try {
+        const token =  getToken(req.headers);
+        console.log(token);
+        const decoded = jwt.verify(token, secretKey);
+        const loggedUser = await User.findOne({ where: { id: decoded.userId }, attributes: { exclude: ['password', 'email', 'username'] } });
+        const { billId } = req.params;
+        const currentPayment = await Payment.findOne({ where: { billId: billId, userId: loggedUser.id } });
+        currentPayment.status = "UNPAID"
+        currentPayment.proof = ""
+        currentPayment.method = null;
+        await currentPayment.save();
+        res.json({message:"Succesfull"})
+    } catch (error) {
+        next(error);
+    }
+}
+
 const userPayTheBillHandler = async (req, res, next) => {
     try {
         const token = getToken(req.headers);
@@ -132,7 +152,7 @@ const userPayTheBillHandler = async (req, res, next) => {
         const { method, accName } = req.body;
         const currentBill = await loggedUser.getBills({ where: { id: billId } });
         currentBill[0].payment.method = method;
-        currentBill[0].payment.status = "Proses"
+        currentBill[0].payment.status = "PROSES"
         currentBill[0].payment.accName = accName;
         // Upload image to Cloudinary
         if (req.file) {
@@ -164,4 +184,4 @@ const userPayTheBillHandler = async (req, res, next) => {
 }
 
 
-module.exports = { userRegisterHandler, userLoginHandler, getUserDataHandler, userGetTheBillHandler, userPayTheBillHandler }
+module.exports = { userRegisterHandler, userLoginHandler, getUserDataHandler, userGetTheBillHandler, userPayTheBillHandler, userRepayTheBillHandler }

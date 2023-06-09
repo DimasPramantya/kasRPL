@@ -1,5 +1,5 @@
 const express = require('express');
-const { getAdminDashboard, postBill, verifyUserPayment, getUserPayment, getAllEventHandler, getEventHandler, postCreateEventHandler, postEventExpenditure } = require('../controllers/admin');
+const { getAdminDashboard, postBill, verifyUserPayment, getUserPayment, getAllEventHandler, getEventHandler, postCreateEventHandler, postEventExpenditure, postFundIncome, getAllCashData } = require('../controllers/admin');
 
 const router = express.Router();
 
@@ -18,5 +18,9 @@ router.get("/event/:eventId", getEventHandler);
 router.post("/create-event", postCreateEventHandler);
 
 router.post("/event/create-expenditure/:eventId", postEventExpenditure);
+
+router.post("/create-fund-income", postFundIncome);
+
+router.get("/get-all-cash-data", getAllCashData)
 
 module.exports = router;

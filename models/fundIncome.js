@@ -16,7 +16,7 @@ const FundIncome = sequelize.define('fundIncomes', {
         type: Sequelize.STRING,
         allowNUll: false
     },
-    cashOut:{
+    ammount:{
         type: Sequelize.INTEGER,
         allowNUll: false,
     },

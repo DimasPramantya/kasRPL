@@ -14,6 +14,10 @@ const Event = sequelize.define('event',{
     }, date:{
         type: Sequelize.STRING,
         allowNUll: false
+    },
+    cashOut:{
+        type: Sequelize.INTEGER,
+        allowNUll: false
     }
 },{
     timestamps: false

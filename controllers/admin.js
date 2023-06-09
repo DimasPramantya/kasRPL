@@ -11,6 +11,7 @@ const User = require('../models/user');
 const Event = require('../models/event');
 const CashBalance = require('../models/cashBalance');
 const Expenditure = require('../models/expenditure');
+const FundIncome = require('../models/fundIncome');
 
 const secretKey = process.env.SECRET_KEY;
 
@@ -60,7 +61,7 @@ const postBill = async(req,res,next)=>{
         validateAdminCreateBillPayload({name,price});
         const member = await Role.findOne({where: {name: "Member"}});
         const persons = await member.getUsers();
-        const currentBill = await Bill.create({name,price});
+        const currentBill = await Bill.create({name,price, cashIn: 0});
         for(let person of persons){
             await currentBill.addUser(person, {through: {status: "Unpaid", method:"", accName:""}});
         }
@@ -76,8 +77,9 @@ const getUserPayment = async(req,res,next)=>{
         const token = getToken(req.headers);
         const decoded = verifyAdmin(token);
         const currentPayment = await Payment.findOne({where: {id: paymentId}});
+        const currentBill = await Bill.findOne({where: {id: currentPayment.billId}})
         res.json({
-            currentPayment
+            currentPayment, currentBill
         })
     } catch (error) {
         next(error)
@@ -95,12 +97,14 @@ const verifyUserPayment = async(req,res,next)=>{
         const currBalance = await CashBalance.findOne({where: {name: "Kas Periode 2022-2023"}});
         if(status == "BERHASIL"){
             currBalance.ammount += currBill.price;
+            currBill.cashIn += currBill.price;
         }
         currentPayment.status = status;
         await currentPayment.save();
         await currBalance.save();
+        await currBill.save();
         res.json({
-            currentPayment, currBalance, username: decoded.username
+            currentPayment, currBalance, username: decoded.username, message:"Verify Payment Successfull"
         })
     } catch (error) {
         next(error)
@@ -113,7 +117,7 @@ const postCreateEventHandler = async(req,res,next)=>{
         const decoded = verifyAdmin(token);
         const {name, date} = req.body;
         const currEvent = await Event.create({
-            name,date
+            name,date,cashOut:0
         });
         res.json({message: "Succesfully Create Event!", });
     } catch (error) {
@@ -158,7 +162,6 @@ const postEventExpenditure = async(req,res,next)=>{
         })
         // Upload image to Cloudinary
         if (req.file) {
-            console.log('test');
             const file = req.file;
             const uploadOptions = {
                 folder: `Event Expenditure/${currEvent.name}/`, // Specify the folder in Cloudinary where you want to store the images
@@ -178,8 +181,12 @@ const postEventExpenditure = async(req,res,next)=>{
             fs.unlinkSync(file.path);
         };
         const currBalance = await CashBalance.findOne({where: {name: "Kas Periode 2022-2023"}});
-        currBalance.ammount -= cashOut;
-        currBalance.save();
+        currBalance.ammount -= parseInt(cashOut);
+        let temp = parseInt(currEvent.dataValues.cashOut);
+        temp += parseInt(cashOut);
+        currEvent.cashOut = temp;
+        await currBalance.save();
+        await currEvent.save();
         await currExpenditure.save();
         res.json({currExpenditure, message: "Succesfully Create Event Expenditure"});
     } catch (error) {
@@ -187,6 +194,50 @@ const postEventExpenditure = async(req,res,next)=>{
     }
 }
 
+const postFundIncome = async(req,res,next)=>{
+    try {
+        const token = getToken(req.headers);
+        const decoded = verifyAdmin(token);
+        const {name, fundSource, ammount} = req.body;
+        await FundIncome.create({
+            name, fundSource, ammount
+        })
+        const currBalance = await CashBalance.findOne({where: {name:"Kas Periode 2022-2023"}});
+        temp = parseInt(currBalance.ammount);
+        temp += parseInt(ammount);
+        console.log(temp);
+        currBalance.ammount = temp;
+        currBalance.save();
+        res.json({currBalance, message: "Create Income Success"});
+    } catch (error) {
+        next(error)
+    }
+}
+
+const getAllCashData = async(req,res,next)=>{
+    try {
+        const bills = await Bill.findAll({attributes:['name', 'cashIn']});
+        let totalCashIn = 0;
+        for(let bill of bills){
+            totalCashIn+=bill.cashIn
+        }
+        const fundIncomes = await FundIncome.findAll({attributes:['name', 'ammount']});
+        for(let fundIncome of fundIncomes){
+            totalCashIn+=fundIncome.ammount
+        }
+        let totalCashOut = 0;
+        const events = await Event.findAll({attributes:['name', 'cashOut']});
+        for(let event of events){
+            totalCashOut+=event.cashOut;
+        }
+        const cashBalances = await CashBalance.findAll({attributes:['name', 'ammount']}) ;
+        res.json({totalCashIn, totalCashOut, bills, fundIncomes, events,cashBalances});
+    } catch (error) {
+        next(error);
+    }
+}
+
 module.exports = {
     getAdminDashboard, postBill, verifyUserPayment, getUserPayment, postCreateEventHandler, getAllEventHandler, postEventExpenditure, getEventHandler
+    ,postFundIncome, getAllCashData
 };
